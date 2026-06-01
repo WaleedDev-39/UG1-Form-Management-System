@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Users – UG-1 Form Management System | UAF</title>
+  <meta name="description" content="Admin panel to manage system users and role assignments."/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/assets/uaf logo.png" type="image/png"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div id="sidebar-placeholder"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-title"><h2>Manage Users</h2><p>Admin panel – system access control</p></div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add User</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div id="users-loading" style="text-align:center;padding:40px;"><span class="spinner"></span></div>
+        <div id="users-content" style="display:none;">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Full Name</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+          <div id="users-empty" class="empty-state" style="display:none;">
+            <div class="icon">👤</div><p>No users found.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add/Edit User Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">Add User</h3>
+      <button class="close-btn" onclick="closeModal('user-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="user-alert" style="display:none;"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name <span style="color:var(--danger)">*</span></label>
+          <input id="u-name" class="form-control" placeholder="Full name"/>
+        </div>
+        <div class="form-group">
+          <label>Username <span style="color:var(--danger)">*</span></label>
+          <input id="u-username" class="form-control" placeholder="Username"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email <span style="color:var(--danger)">*</span></label>
+        <input id="u-email" type="email" class="form-control" placeholder="email@uaf.edu.pk"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role <span style="color:var(--danger)">*</span></label>
+          <select id="u-role" class="form-control">
+            <option value="staff">Staff</option>
+            <option value="faculty">Faculty</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group" id="u-password-group">
+          <label id="u-password-label">Password <span style="color:var(--danger)">*</span></label>
+          <input id="u-password" type="password" class="form-control" placeholder="Min 6 characters"/>
+        </div>
+      </div>
+      <div class="form-group" id="u-active-group" style="display:none;">
+        <label>
+          <input type="checkbox" id="u-active" checked/>
+          &nbsp; Account Active
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="btn btn-primary" id="user-save-btn" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script src="js/users.js"></script>
+</body>
+</html>

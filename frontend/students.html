@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Students – UG-1 Form Management System | UAF</title>
+  <meta name="description" content="Manage student records for UG-1 enrollment forms."/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/assets/uaf logo.png" type="image/png"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div id="sidebar-placeholder"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-title"><h2>Students</h2><p>Manage student records</p></div>
+      <div class="topbar-right" data-role="admin,staff">
+        <button class="btn btn-outline btn-sm" onclick="openImportModal()">📂 Import Excel/CSV</button>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Student</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input id="search-input" class="form-control" placeholder="Search name, AG number, CNIC…" oninput="debounceSearch()"/>
+        </div>
+        <span id="student-count" style="font-size:0.82rem;color:var(--text-muted);"></span>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div id="students-loading" style="text-align:center;padding:40px;"><span class="spinner"></span></div>
+        <div id="students-content" style="display:none;">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>AG Number</th>
+                  <th>Student Name</th>
+                  <th>Father's Name</th>
+                  <th>CNIC</th>
+                  <th>Boarder</th>
+                  <th>Sem.</th>
+                  <th>Program</th>
+                  <th style="text-align:center;">Barcode</th>
+                  <th style="text-align:center;" data-role="admin,staff">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody"></tbody>
+            </table>
+          </div>
+          <div id="students-empty" class="empty-state" style="display:none;">
+            <div class="icon">🎓</div>
+            <p>No students found. <a href="#" onclick="openAddModal()">Add the first student</a></p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Add Student</h3>
+      <button class="close-btn" onclick="closeModal('student-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-alert" style="display:none;"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>AG Number <span style="color:var(--danger)">*</span></label>
+          <input id="f-ag" class="form-control" placeholder="2022-AG-8036" id="f-ag"/>
+        </div>
+        <div class="form-group">
+          <label>CNIC <span style="color:var(--danger)">*</span></label>
+          <input id="f-cnic" class="form-control" placeholder="3310012345678"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Student Name <span style="color:var(--danger)">*</span></label>
+          <input id="f-name" class="form-control" placeholder="Full name"/>
+        </div>
+        <div class="form-group">
+          <label>Father's Name <span style="color:var(--danger)">*</span></label>
+          <input id="f-father" class="form-control" placeholder="Father's full name"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Boarder Status <span style="color:var(--danger)">*</span></label>
+          <select id="f-boarder" class="form-control">
+            <option value="Boarder">Boarder</option>
+            <option value="Non-Boarder">Non-Boarder</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Semester <span style="color:var(--danger)">*</span></label>
+          <select id="f-semester" class="form-control">
+            <option value="">Select semester</option>
+            <option value="1">1st Semester</option>
+            <option value="2">2nd Semester</option>
+            <option value="3">3rd Semester</option>
+            <option value="4">4th Semester</option>
+            <option value="5">5th Semester</option>
+            <option value="6">6th Semester</option>
+            <option value="7">7th Semester</option>
+            <option value="8">8th Semester</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Department</label>
+          <input id="f-dept" class="form-control" placeholder="e.g. Computer Science"/>
+        </div>
+        <div class="form-group">
+          <label>Program</label>
+          <input id="f-prog" class="form-control" placeholder="e.g. BS Computer Science"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('student-modal')">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveStudent()">Save Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Barcode Modal -->
+<div class="modal-overlay" id="barcode-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🔳 Student Barcode</h3>
+      <button class="close-btn" onclick="closeModal('barcode-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <p id="barcode-ag" style="font-weight:600;margin-bottom:16px;color:var(--navy);"></p>
+      <img id="barcode-img" src="" alt="Barcode" style="max-width:100%;border:1px solid var(--border);border-radius:6px;padding:12px;background:#fff;"/>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-top:12px;">Print this barcode and attach it to the student's UG-1 form.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('barcode-modal')">Close</button>
+      <button class="btn btn-primary" onclick="printBarcode()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📂 Import Students from Excel/CSV</h3>
+      <button class="close-btn" onclick="closeModal('import-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="font-size:0.82rem;">
+        ℹ️ Required columns: <strong>ag_number, cnic, name, father_name, boarder_status, semester</strong><br>
+        Optional: department, program<br>
+        Boarder status: "Boarder" or "Non-Boarder"
+      </div>
+      <div id="import-alert" style="display:none;"></div>
+      <div class="form-group">
+        <label>Select File (.xlsx or .csv)</label>
+        <input id="import-file" type="file" class="form-control" accept=".xlsx,.csv"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
+      <button class="btn btn-primary" id="import-btn" onclick="importStudents()">Import</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script src="js/students.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – UG-1 Form Management System | UAF</title>
+  <meta name="description" content="Login to UAF UG-1 Form Management System for automated enrollment form processing."/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/assets/uaf logo.png" type="image/png"/>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="/assets/uaf logo.png" alt="UAF Logo"/>
+      <h2>UG-1 Form Management</h2>
+      <p>University of Agriculture Faisalabad</p>
+    </div>
+    <div class="login-divider"></div>
+
+    <div id="login-alert" style="display:none"></div>
+
+    <form id="login-form" autocomplete="off">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input id="username" type="text" class="form-control" placeholder="Enter your username" required autofocus/>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" class="form-control" placeholder="Enter your password" required/>
+      </div>
+      <button id="login-btn" type="submit" class="btn btn-primary btn-lg" style="width:100%;margin-top:8px;">
+        Sign In
+      </button>
+    </form>
+
+    <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:24px;">
+      &copy; 2024 University of Agriculture Faisalabad
+    </p>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/api.js"></script>
+<script>
+  // Redirect if already logged in
+  if (isLoggedIn()) window.location.href = '/dashboard.html';
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    const alertEl = document.getElementById('login-alert');
+    alertEl.style.display = 'none';
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in…';
+
+    try {
+      const data = await fetchAPI('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value,
+        }),
+      });
+      saveAuth(data.access_token, data.user);
+      window.location.href = '/dashboard.html';
+    } catch (err) {
+      alertEl.className = 'alert alert-danger';
+      alertEl.innerHTML = `❌ ${err.message}`;
+      alertEl.style.display = 'flex';
+      btn.disabled = false;
+      btn.innerHTML = 'Sign In';
+    }
+  });
+</script>
+</body>
+</html>

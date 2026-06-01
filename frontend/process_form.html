@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Process UG-1 Form – UAF</title>
+  <meta name="description" content="Scan barcode or enter AG number to process UG-1 enrollment forms."/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/assets/uaf logo.png" type="image/png"/>
+  <style>
+    .step-indicator {
+      display:flex; gap:0; margin-bottom:28px; counter-reset:step;
+    }
+    .step {
+      flex:1; text-align:center; position:relative; padding-bottom:12px;
+    }
+    .step::after {
+      content:''; position:absolute; top:16px; left:50%; width:100%; height:2px;
+      background:var(--border); z-index:0;
+    }
+    .step:last-child::after { display:none; }
+    .step-circle {
+      width:34px; height:34px; border-radius:50%; background:var(--border);
+      color:var(--text-muted); font-weight:600; font-size:0.85rem;
+      display:flex; align-items:center; justify-content:center;
+      margin:0 auto 8px; position:relative; z-index:1; transition:all 0.3s;
+    }
+    .step.active .step-circle  { background:var(--navy); color:#FFF; }
+    .step.done   .step-circle  { background:var(--success); color:#FFF; }
+    .step-label { font-size:0.74rem; color:var(--text-muted); font-weight:500; }
+    .step.active .step-label   { color:var(--navy); font-weight:600; }
+    .step.done   .step-label   { color:var(--success); }
+
+    .scan-input-wrapper {
+      position:relative;
+    }
+    .scan-input-wrapper input {
+      font-size:1rem; font-weight:600; letter-spacing:0.04em;
+      padding-right:110px; font-family:'Poppins',sans-serif;
+    }
+    .scan-status {
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      font-size:0.72rem; font-weight:600; padding:3px 10px;
+      border-radius:99px; background:var(--sky-light); color:var(--sky);
+    }
+    .scan-status.ready { background:var(--success-bg); color:var(--success); }
+
+    .fee-buttons { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+    .fee-btn {
+      padding:16px; border-radius:var(--radius); border:2px solid var(--border);
+      cursor:pointer; text-align:center; background:var(--white);
+      transition:all 0.2s; font-family:'Inter',sans-serif;
+    }
+    .fee-btn:hover { border-color:var(--navy); }
+    .fee-btn.selected-paid        { border-color:var(--success); background:var(--success-bg); }
+    .fee-btn.selected-installment { border-color:var(--warning); background:var(--warning-bg); }
+    .fee-btn.selected-deferred    { border-color:var(--danger);  background:var(--danger-bg); }
+    .fee-btn .fee-icon { font-size:1.8rem; margin-bottom:6px; }
+    .fee-btn .fee-name { font-weight:600; font-size:0.88rem; }
+    .fee-btn .fee-desc { font-size:0.72rem; color:var(--text-muted); margin-top:2px; }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <div id="sidebar-placeholder"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h2>Process UG-1 Form</h2>
+        <p>Scan barcode or enter AG number to begin</p>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div style="max-width:720px;margin:0 auto;">
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+          <div class="step active" id="step-1"><div class="step-circle">1</div><div class="step-label">Identify Student</div></div>
+          <div class="step"        id="step-2"><div class="step-circle">2</div><div class="step-label">Confirm Details</div></div>
+          <div class="step"        id="step-3"><div class="step-circle">3</div><div class="step-label">Fee & Voucher</div></div>
+          <div class="step"        id="step-4"><div class="step-circle">4</div><div class="step-label">Done</div></div>
+        </div>
+
+        <!-- ── STEP 1: Scan / Enter AG Number ── -->
+        <div id="panel-1" class="card">
+          <div class="card-header">
+            <h3>📷 Step 1 – Identify Student</h3>
+          </div>
+
+          <div id="step1-alert" style="display:none"></div>
+
+          <!-- Toggle -->
+          <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <button id="toggle-scanner" class="btn btn-primary" onclick="setMode('scanner')">🔳 Barcode Scanner</button>
+            <button id="toggle-manual"  class="btn btn-outline"  onclick="setMode('manual')">✏️ Manual Entry</button>
+          </div>
+
+          <!-- Scanner mode -->
+          <div id="mode-scanner">
+            <div class="barcode-box active" style="margin-bottom:16px;">
+              <p style="font-size:2rem;margin-bottom:8px;">🔲</p>
+              <p style="color:var(--text-sub);font-size:0.9rem;margin:0 0 12px;">
+                Point your USB barcode scanner at the UG-1 form barcode.<br>
+                <small style="color:var(--text-muted);">The field below will capture the scan automatically.</small>
+              </p>
+              <div class="scan-input-wrapper">
+                <input id="barcode-input" class="form-control" placeholder="Waiting for scan…" autocomplete="off"
+                  style="text-align:center;font-size:1rem;"/>
+                <span class="scan-status" id="scan-status">Waiting…</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manual mode -->
+          <div id="mode-manual" style="display:none;">
+            <div class="alert alert-info">
+              ℹ️ Use manual entry for <strong>1st semester students</strong> who don't have a barcode yet,
+              or if the scanner is unavailable.
+            </div>
+            <div class="form-group">
+              <label for="ag-manual">Student AG Number</label>
+              <input id="ag-manual" class="form-control" placeholder="e.g. 2022-AG-8036"
+                style="font-size:1rem;font-weight:600;font-family:'Poppins',sans-serif;letter-spacing:0.04em;"/>
+            </div>
+            <button class="btn btn-primary" onclick="lookupStudent(document.getElementById('ag-manual').value.trim())">
+              🔍 Fetch Student
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 2: Student Details ── -->
+        <div id="panel-2" class="card" style="display:none;">
+          <div class="card-header">
+            <h3>🎓 Step 2 – Student Details</h3>
+            <button class="btn btn-outline btn-sm" onclick="resetToStep1()">← Back</button>
+          </div>
+          <div class="student-info-grid" id="student-details-grid"></div>
+
+          <div style="margin-top:20px;display:flex;gap:10px;">
+            <button class="btn btn-primary" onclick="goToStep3()">Confirm & Continue →</button>
+          </div>
+        </div>
+
+        <!-- ── STEP 3: Voucher & Fee Status ── -->
+        <div id="panel-3" class="card" style="display:none;">
+          <div class="card-header">
+            <h3>💳 Step 3 – Voucher ID & Fee Status</h3>
+            <button class="btn btn-outline btn-sm" onclick="goToStep2()">← Back</button>
+          </div>
+
+          <div id="step3-alert" style="display:none"></div>
+
+          <div class="form-group">
+            <label for="voucher-id">Voucher ID <span style="color:var(--danger)">*</span></label>
+            <input id="voucher-id" class="form-control" placeholder="Enter the fee voucher ID"
+              style="font-size:1rem;font-family:'Poppins',sans-serif;font-weight:600;"/>
+          </div>
+
+          <div class="form-group">
+            <label>Fee Payment Status <span style="color:var(--danger)">*</span></label>
+            <div class="fee-buttons">
+              <div class="fee-btn" id="fee-paid" onclick="selectFee('Paid')">
+                <div class="fee-icon">✅</div>
+                <div class="fee-name">Paid</div>
+                <div class="fee-desc">Full fee paid</div>
+              </div>
+              <div class="fee-btn" id="fee-installment" onclick="selectFee('Installment')">
+                <div class="fee-icon">🔄</div>
+                <div class="fee-name">Installment</div>
+                <div class="fee-desc">Partial payment</div>
+              </div>
+              <div class="fee-btn" id="fee-deferred" onclick="selectFee('Deferred')">
+                <div class="fee-icon">⏳</div>
+                <div class="fee-name">Deferred</div>
+                <div class="fee-desc">Payment deferred</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="form-notes">Notes (optional)</label>
+            <textarea id="form-notes" class="form-control" rows="2" placeholder="Any additional remarks…"></textarea>
+          </div>
+
+          <button id="submit-btn" class="btn btn-success btn-lg" onclick="submitForm()">
+            ✅ Submit UG-1 Form
+          </button>
+        </div>
+
+        <!-- ── STEP 4: Success ── -->
+        <div id="panel-4" class="card" style="display:none;text-align:center;padding:48px 24px;">
+          <div style="font-size:3.5rem;margin-bottom:12px;">🎉</div>
+          <h2 style="color:var(--success);margin-bottom:8px;">Form Submitted!</h2>
+          <p id="success-msg" style="font-size:0.95rem;margin-bottom:24px;"></p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-lg" onclick="processAnother()">Process Another Form</button>
+            <a href="/reports.html" class="btn btn-outline btn-lg">View Reports</a>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script src="js/process_form.js"></script>
+</body>
+</html>
