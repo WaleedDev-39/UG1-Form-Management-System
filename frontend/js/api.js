@@ -1,9 +1,10 @@
 /* ─── api.js – Central API utility ─────────────────────────────────────────
    All requests go through fetchAPI().
    Token is read from localStorage on every call.
+   Backend URL is configured in ../config.js
 ──────────────────────────────────────────────────────────────────────────── */
 
-const BASE_URL = 'http://127.0.0.1:8000';
+// Note: BASE_URL is defined in config.js - update that file for different environments
 
 function getToken() {
   return localStorage.getItem('ug1_token') || '';
