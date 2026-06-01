@@ -6,12 +6,13 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.9
-pydantic[email]==2.6.1
+pydantic[email]==2.7.4
 python-dotenv==1.0.1
 python-barcode==0.15.1
-Pillow>=11.0.0
+Pillow==10.1.0
 openpyxl>=3.1.2
-pandas>=2.2.0
+pandas>=2.0.0
 pyzbar==0.1.9
-cryptography>=42.0.0
+cryptography>=41.0.0
 qrcode[pil]==7.4.2
+gunicorn==22.0.0
