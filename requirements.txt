@@ -1,0 +1,3 @@
+# UG-1 Form Management System - Main requirements file
+# This file is used by Render for builds
+-r backend/requirements.txt
